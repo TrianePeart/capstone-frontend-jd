@@ -56,7 +56,7 @@ function NavBar() {
             </div>
           )}
         </div>
-        <div
+        <Link href='settings'
           className='settings'
           onClick={handleSettingsClick}
           onKeyDown={e => {
@@ -69,7 +69,7 @@ function NavBar() {
           //This role is creating this error
         >
           <button className='settings-btn'>Settings</button>
-        </div>
+        </Link>
       </nav>
       {showSettings && (
         <div className='settings-sidebar'>
