@@ -1,10 +1,9 @@
-import React from 'react';
-import userProfile from '../components/userProfile';
+import Chat from '../components/Chat';
 
 function DirectMessages() {
     return (
         <div>
-            <userProfile />
+            <Chat />
         </div>
     );
 }
