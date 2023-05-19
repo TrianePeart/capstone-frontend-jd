@@ -69,6 +69,7 @@ function NavBar() {
             </div>
           )}
         </div>
+
         <Link className="settings" onClick={handleSettingsClick}>
           <button className="settings-btn">Settings</button>
         </Link>
