@@ -1,9 +1,9 @@
-import Chat from '../components/Chat';
+import ChatWindow from '../components/ChatWindow';
 
 function DirectMessages() {
     return (
         <div>
-            <Chat />
+            <ChatWindow />
         </div>
     );
 }

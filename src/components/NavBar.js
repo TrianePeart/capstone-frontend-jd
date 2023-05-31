@@ -28,7 +28,7 @@ function NavBar() {
   return (
     <>
       <nav className="navbar">
-        <Link to="/users">
+        <Link to="/profile">
           <button className="profile-pic">Profile Picture</button>
         </Link>
         <div
@@ -52,7 +52,7 @@ function NavBar() {
           <button className="dropbtn">Messages</button>
           {showMessages && (
             <div className="dropdown-content">
-              <Link to="/inbox">Inbox</Link>
+              <Link to="/messages">Inbox</Link>
             </div>
           )}
         </div>
