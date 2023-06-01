@@ -14,7 +14,7 @@ import FourOFour from './pages/Four0Four';
 
 // COMPONENTS
 import NavBar from './components/NavBar';
-import Forums from './components/Forum';
+import ForumPage from './pages/ForumPage';
 import './App.css';
 import NewForum from './pages/NewForum';
 import User from './pages/User';
@@ -26,20 +26,20 @@ function App() {
   return (
     <div className="App">
       <Router>
-        {/* {signedIn && <NavBar />} */}
-        <NavBar />
+        {signedIn && <NavBar />}
+        {/* <NavBar /> */}
         <Routes>
           <Route path="/" element={<Landing setSignedIn={setSignedIn} />} />
-          <Route path="/signup" element={<SignUp setSignedIn={setSignedIn} />} />
+          <Route path="/signup" element={<SignUp />} />
           <Route path="/users" element={<User />} />
           <Route path="/profile" element={<SafeSpace />} />
           <Route path="/editProfile" element={<EditProfilePage />} />
-          <Route path="/forums" element={<Forums />} />
+          <Route path="/forums" element={<ForumPage />} />
           {/* <Route exact path="/forums/:id" element={<ShowPost />} /> */}
           <Route path="/forums/new" element={<NewForum />} />
           <Route path="/myPosts" element={<Posts />} />
           <Route path="/messages" element={<DirectMessages />} />
-          <Route path="/locations" element={<Map />} />
+          <Route path="/maps" element={<Map />} />
           <Route path="/journal" element={<Journal />} />
           <Route path="*" element={<FourOFour />} />
         </Routes>

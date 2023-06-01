@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
-
+import '../style/Forum.css';
 const API = process.env.REACT_APP_API_URL;
 
 function Forums() {
