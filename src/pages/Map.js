@@ -1,14 +1,14 @@
 import React from 'react';
-import Rating from '../components/Rating';
-import Review from '../components/Review';
+import Map from '../components/Map'
 
-function Map() {
+function SensoryMap() {
     return (
         <div>
-            <Rating />
-            <Review />
+            {/* <Rating />
+            <Review /> */}
+            <Map/>
         </div>
     );
 }
 
-export default Map;
+export default SensoryMap;
