@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
+
 function MyProfile(props) {
   const [user, setUser] = useState({});
   const [selectedAvatar, setSelectedAvatar] = useState(null); // Add selectedAvatar state
