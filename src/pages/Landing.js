@@ -1,10 +1,11 @@
 import React from 'react';
-
+import Login from '../components/Login'
+import '../style/Landing.css';
 
 function Landing(props) {
     return (
         <div>
-            <h1>Testing</h1>
+          <Login />
         </div>
     );
 }
