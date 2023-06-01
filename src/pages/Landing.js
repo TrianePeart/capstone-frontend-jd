@@ -2,7 +2,7 @@ import React from 'react';
 import Login from '../components/Login'
 import '../style/Landing.css';
 
-function Landing(props) {
+function Landing() {
     return (
         <div>
           <Login />
