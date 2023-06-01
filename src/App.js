@@ -26,8 +26,8 @@ function App() {
   return (
     <div className="App">
       <Router>
-        {signedIn && <NavBar />}
-        {/* <NavBar /> */}
+        {/* {signedIn && <NavBar />} */}
+        <NavBar />
         <Routes>
           <Route path="/" element={<Landing setSignedIn={setSignedIn} />} />
           <Route path="/signup" element={<SignUp />} />
