@@ -5,7 +5,7 @@ import '../style/Landing.css';
 function Landing() {
     return (
         <div>
-          <Login />
+          {/* <Login /> */}
         </div>
     );
 }
