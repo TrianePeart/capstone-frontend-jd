@@ -4,14 +4,24 @@
   display: flex;
   justify-content: flex-start;
   padding: 8px;
+	box-shadow: 0px 10px 10px rgba(0,0,0,0.1);
 }
 
-.profile-pic {
+.profile-pic,
+.dropbtn,
+.settings-btn {
   color: black;
   background-color: transparent;
   border: none;
   font-size: 16px;
   cursor: pointer;
+}
+
+.profile-pic:hover,
+.dropbtn:hover,
+.settings-btn:hover {
+  color: white;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3);
 }
 
 .dropdown {
@@ -35,23 +45,9 @@
   display: block;
 }
 
-.dropbtn {
-  color: black;
-  background-color: transparent;
-  border: none;
-  font-size: 16px;
-  cursor: pointer;
-  margin-left: 10px;
-}
-
-.dropbtn:hover {
-  color: white;
-  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3);
-}
-
 .dropdown-content a:hover {
   background-color: white;
-  color: #3F00FF;
+  color: #3f00ff;
 }
 
 .dropdown:hover .dropbtn {
@@ -61,21 +57,6 @@
 
 .dropdown:hover .dropdown-content {
   display: block;
-}
-
-.settings-btn {
-
-  color: black;
-  background-color: transparent;
-  border: none;
-  font-size: 16px;
-  cursor: pointer;
-  margin-right: 10px;
-}
-
-.settings-btn:hover {
-  color: white;
-  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3);
 }
 
 .settings-sidebar {
@@ -101,11 +82,11 @@
 
 .settings-sidebar a:hover {
   background-color: white;
-  color: #3F00FF;
+  color: #3f00ff;
 }
 
 .settings-sidebar h2 {
-  color: #3F00FF;
+  color: #3f00ff;
   margin-bottom: 16px;
 }
 
@@ -113,16 +94,12 @@
   position: absolute;
   top: 16px;
   right: 16px;
-  color: #3F00FF;
+  color: #3f00ff;
   font-size: 20px;
   cursor: pointer;
   border: none;
   background-color: transparent;
   outline: none;
-}
-
-.settings-sidebar {
-  color: white;
 }
 
 .settings-sidebar .menu-links {
@@ -136,7 +113,7 @@
 }
 
 .settings-sidebar .menu-links a {
-  color: #3F00FF;
+  color: #3f00ff;
   text-decoration: none;
   font-size: 18px;
   display: block;
@@ -149,5 +126,5 @@
 }
 
 .settings-sidebar .sidebar-content {
-  margin-top: 30px
+  margin-top: 30px;
 }

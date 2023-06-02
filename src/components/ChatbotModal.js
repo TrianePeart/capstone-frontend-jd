@@ -9,7 +9,7 @@ const ChatbotModal = () => {
   const [chatMessages, setChatMessages] = useState([]);
 
   const handleButtonClick = () => {
-    if (selectedMood === "I'm feeling Good.") {
+    if (selectedMood === moods[0]) {
       setChatMessages([
         { type: 'bot', text: 'We are happy to hear that!' },
       ]);
@@ -36,19 +36,61 @@ const ChatbotModal = () => {
     setSelectedMood('How are you feeling?');
   };
 
+  const handleNextPrompt = (response) => {
+    let newMessages = [];
+  
+    switch (moodIndex) {
+      case 1: // Angry
+        if (response === 'yes') {
+          newMessages.push(
+            { type: 'bot', text: 'Are you thinking of harming yourself or others?' }
+          );
+        }else if (response = 'yes'){
+          return handleYesClick();
+        } else {
+          handleNoClick();
+          return;
+        }
+        break;
+      case 2: // Sad
+        if (response === 'yes') {
+          newMessages.push(
+            { type: 'bot', text: 'Are you having feelings of self-harm?' }
+          );
+        } else {
+          handleNoClick();
+          return;
+        }
+        break;
+      case 3: // Worthless
+        if (response === 'yes') {
+          newMessages.push(
+            { type: 'bot', text: 'We are sorry you\'re feeling down. Are you having feelings of self-harm?' }
+          );
+        } else {
+          handleNoClick();
+          return;
+        }
+        break;
+      default:
+        break;
+    }
+  
+    setChatMessages((prevMessages) => [...prevMessages, ...newMessages]);
+  };
+  
   const handleYesClick = () => {
     const selectedMood = moods[moodIndex];
     let newMessages = [];
   
-    if (selectedMood === "I'm feeling Angry") {
-      newMessages.push(
-        { type: 'bot', text: 'Are you thinking of harming yourself or others?' }
-      );
+    if (selectedMood === moods[1]) {
+      //Anger
       newMessages.push(
         { type: 'bot', text: 'Please seek help by following this link: hotline-website-link' },
         { type: 'bot', text: 'If you need immediate assistance, please call the hotline at: hotline-number' }
       );
-    } else if (selectedMood === "I'm feeling Sad") {
+    } else if (selectedMood === moods[2]) {
+      //Sadness
       newMessages.push(
         { type: 'bot', text: 'Are you having feelings of self-harm?' }
       );
@@ -56,7 +98,8 @@ const ChatbotModal = () => {
         { type: 'bot', text: 'Please seek help by following this link: hotline-website-link' },
         { type: 'bot', text: 'If you need immediate assistance, please call the hotline at: hotline-number' }
       );
-    } else if (selectedMood === "I'm feeling Worthless") {
+    } else if (selectedMood === moods[3]) {
+      //Worthless
       newMessages.push(
         { type: 'bot', text: 'We are sorry you\'re feeling down. Are you having feelings of self-harm?' }
       );
@@ -73,11 +116,12 @@ const ChatbotModal = () => {
     const selectedMood = moods[moodIndex];
     let newMessages = [];
   
-    if (selectedMood === "I'm feeling Angry") {
+    if (selectedMood === moods[1]) {
       newMessages.push(
         { type: 'bot', text: 'Here is a link on ways to deal with anger: ways-to-deal-link' }
       );
-    } else if (selectedMood === "I'm feeling Sad") {
+      //have to change it to close modal after this is done 
+    } else if (selectedMood === moods[2]) {
       newMessages.push(
         { type: 'bot', text: 'Here is a link on ways to deal with sadness: ways-to-deal-link' }
       );
@@ -85,6 +129,7 @@ const ChatbotModal = () => {
   
     setChatMessages((prevMessages) => [...prevMessages, ...newMessages]);
   };
+  
 
   return (
     <div className="chat-container">
@@ -118,10 +163,11 @@ const ChatbotModal = () => {
               {selectedMood === "I'm feeling Good." && (
                 <div className="confetti">Confetti animation goes here</div>
               )}
-              {selectedMood !== "I'm feeling Good." && (
+              {selectedMood !== moods[0] && (
+                //This is not working how it should buttons should not be showing on "Im feeling good"
                 <div className="prompt-buttons">
-                  <button onClick={handleYesClick}>Yes</button>
-                  <button onClick={handleNoClick}>No</button>
+                  <button onClick={() => handleNextPrompt('yes')}>Yes</button>
+                  <button onClick={() => handleNextPrompt('no')}>No</button>
                 </div>
               )}
             </div>

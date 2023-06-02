@@ -8,11 +8,32 @@ const API = process.env.REACT_APP_API_URL;
 const SensoryMap = () => {
   const [locations, setLocations] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedLocation, setSelectedLocation] = useState(null);
   const mapRef = useRef(null);
   const map = useRef(null);
 
+  const fetchLocations = async () => {
+    try {
+      const response = await axios.get(`/${API}/locations?search=${searchQuery}`);
+      const newLocations = response.data;
+
+      setLocations(newLocations);
+
+      newLocations.forEach((location) => {
+        const marker = L.marker([location.latitude, location.longitude]).addTo(map.current);
+        marker
+          .bindPopup(`<b>${location.name}</b><br>${location.address}`)
+          .openPopup();
+      });
+    } catch (error) {
+      console.error('Error fetching locations:', error.response || error);
+    }
+  };
+
   useEffect(() => {
     const initializeMap = () => {
+      if (map.current !== null) return; // Exit if map is already initialized
+
       const newMap = L.map(mapRef.current).setView([40.7128, -74.0060], 12);
 
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -24,32 +45,8 @@ const SensoryMap = () => {
       map.current = newMap;
     };
 
-    const fetchLocations = async () => {
-      try {
-        const response = await axios.get(`/${API}/locations?search=${searchQuery}`);
-        const newLocations = response.data;
-
-        setLocations(newLocations);
-
-        newLocations.forEach((location) => {
-          const marker = L.marker([location.latitude, location.longitude]).addTo(map.current);
-          marker
-            .bindPopup(`<b>${location.name}</b><br>${location.address}`)
-            .openPopup();
-        });
-      } catch (error) {
-        console.error('Error fetching locations:', error.response || error);
-      }
-    };
-
     initializeMap();
     fetchLocations();
-
-    return () => {
-      if (map.current) {
-        map.current.remove();
-      }
-    };
   }, [searchQuery]);
 
   const handleRatingChange = (rating, locationId) => {
@@ -95,29 +92,36 @@ const SensoryMap = () => {
     }
   };
 
-  const handleSearch = () => {
-    setSearchQuery(searchQuery);
+  const handleSearch = (e) => {
+    e.preventDefault();
+    fetchLocations();
+  };
+
+  const handleLocationSelect = (location) => {
+    setSelectedLocation(location);
   };
 
   return (
     <div>
       <h1>Map</h1>
-      <div>
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search for a location"
-        />
-        <button onClick={handleSearch}>Search</button>
-      </div>
+      <form onSubmit={handleSearch}>
+        <div>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search for a location"
+          />
+          <button type="submit">Search</button>
+        </div>
+      </form>
       <div id="map" ref={mapRef} style={{ height: '400px' }}></div>
-      {locations.map((location) => (
-        <div key={location.id}>
-          <h3>{location.name}</h3>
-          <p>{location.address}</p>
+      {selectedLocation && (
+        <div>
+          <h3>{selectedLocation.name}</h3>
+          <p>{selectedLocation.address}</p>
           <ul>
-            {location.reviews.map((review) => (
+            {selectedLocation.reviews.map((review) => (
               <li key={review.id}>
                 <strong>Rating:</strong> {review.rating},{' '}
                 <strong>Comment:</strong> {review.comment}
@@ -128,20 +132,26 @@ const SensoryMap = () => {
             type="number"
             min="1"
             max="5"
-            value={location.rating}
-            onChange={(e) => handleRatingChange(e.target.value, location.id)}
+            value={selectedLocation.rating}
+            onChange={(e) => handleRatingChange(e.target.value, selectedLocation.id)}
           />
           <textarea
-            value={location.reviewComment}
-            onChange={(e) => handleCommentChange(e.target.value, location.id)}
+            value={selectedLocation.reviewComment}
+            onChange={(e) => handleCommentChange(e.target.value, selectedLocation.id)}
           ></textarea>
           <button
             onClick={() =>
-              handleReviewSubmit(location.id, location.rating, location.reviewComment)
+              handleReviewSubmit(selectedLocation.id, selectedLocation.rating, selectedLocation.reviewComment)
             }
           >
             Submit Review
           </button>
+        </div>
+      )}
+      {locations.map((location) => (
+        <div key={location.id} onClick={() => handleLocationSelect(location)} role="button" tabIndex={0}>
+          <h3>{location.name}</h3>
+          <p>{location.address}</p>
         </div>
       ))}
     </div>
