@@ -1,49 +1,44 @@
 import React, { useState, useEffect } from 'react';
-import { Navigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
-  const [shouldRedirect, setShouldRedirect] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const storeEmail = localStorage.getItem('email');
-    const storePassword = localStorage.getItem('password');
-
-    if (storeEmail && storePassword) {
-      setEmail(storeEmail);
-      setPassword(storePassword);
+    const loggedInUser = localStorage.getItem('user');
+    if (loggedInUser) {
+      navigate('/profile');
     }
-  }, []);
+  }, [navigate]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
 
     try {
-      const res = await axios.post('/login', { email, password });
+      const response = await axios.post(`${process.env.REACT_APP_API_URL}/`, {
+        email,
+        password,
+      });
+      const data = response.data;
 
-      if (res.status === 201) {
-        // This is making sure they logged in correctly.
-
-        // local storage for email and password
-        localStorage.setItem('email', email);
-        localStorage.setItem('password', password);
-
-        setShouldRedirect(true);
+      if (response.status === 200) {
+        localStorage.setItem('user', JSON.stringify(data.user));
+        navigate('/profile');
       } else {
-        setErrorMessage('User Not Found!');
+        setErrorMessage(data.message);
       }
     } catch (error) {
-      console.log(error);
-      setErrorMessage('Error Creating User: ' + error.message);
+      console.error('Error:', error);
     }
   };
 
-  if (shouldRedirect) {
-    return <Navigate to="/signup" />;
-  }
+  const handleSignupRedirect = () => {
+    navigate('/signup');
+  };
 
   return (
     <div className="landing-container">
@@ -56,6 +51,7 @@ function Login() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="login-input"
+            required
           />
           <input
             type="password"
@@ -63,6 +59,7 @@ function Login() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="login-input"
+            required
           />
           <button type="submit" className="login-button">
             Login
@@ -71,7 +68,7 @@ function Login() {
         {errorMessage && <p>{errorMessage}</p>}
         <div className="signup-link">
           <p>Don't have an account?</p>
-          <button onClick={() => setShouldRedirect(true)}>Sign up</button>
+          <button onClick={handleSignupRedirect}>Sign up</button>
         </div>
       </div>
     </div>
