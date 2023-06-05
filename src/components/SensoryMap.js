@@ -1,159 +1,170 @@
-import React, { useEffect, useRef, useState } from 'react';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-import axios from 'axios';
-
-const API = process.env.REACT_APP_API_URL;
+import React, { useState, useEffect, useRef } from 'react';
+import { GoogleMap, Marker, InfoWindow, Autocomplete } from '@react-google-maps/api';
+import '../style/SensoryMap.css';
 
 const SensoryMap = () => {
-  const [locations, setLocations] = useState([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedLocation, setSelectedLocation] = useState(null);
-  const mapRef = useRef(null);
-  const map = useRef(null);
+  const [mapCenter, setMapCenter] = useState({ lat: 40.7128, lng: -74.0060 });
+  const [markers, setMarkers] = useState([]);
+  const [selectedMarker, setSelectedMarker] = useState(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const autocompleteRef = useRef(null);
+  const [isMapLoaded, setIsMapLoaded] = useState(false);
 
-  const fetchLocations = async () => {
-    try {
-      const response = await axios.get(`/${API}/locations?search=${searchQuery}`);
-      const newLocations = response.data;
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/maps`);
+        const data = await response.json();
+        const filteredData = data.filter((location) =>
+          location.address.toLowerCase().includes('new york city')
+        );
+        setMarkers(filteredData);
+      } catch (error) {
+        console.error('Error fetching locations:', error);
+      }
+    };
 
-      setLocations(newLocations);
+    fetchData();
+  }, []);
 
-      newLocations.forEach((location) => {
-        const marker = L.marker([location.latitude, location.longitude]).addTo(map.current);
-        marker
-          .bindPopup(`<b>${location.name}</b><br>${location.address}`)
-          .openPopup();
+  const handleMarkerClick = (marker) => {
+    setSelectedMarker(marker);
+  };
+
+  const handleInfoWindowClose = () => {
+    setSelectedMarker(null);
+  };
+
+  const handlePlaceSelect = () => {
+    const place = autocompleteRef.current.getPlace();
+    if (place && place.geometry) {
+      setMapCenter({
+        lat: place.geometry.location.lat(),
+        lng: place.geometry.location.lng()
       });
+    }
+  };
+
+  const handleReviewSubmit = async (event) => {
+    event.preventDefault();
+    const { rating, comment } = event.target;
+
+    if (!isLoggedIn) {
+      console.error('You must be logged in to submit a review.');
+      return;
+    }
+
+    try {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/maps/${selectedMarker.id}/reviews`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          rating: rating.value,
+          comment: comment.value
+        })
+      });
+      const newReview = await response.json();
+      console.log('New review:', newReview);
+      const reviewsResponse = await fetch(`${process.env.REACT_APP_API_URL}/maps/${selectedMarker.id}/reviews`);
+      const reviewsData = await reviewsResponse.json();
+      setSelectedMarker({ ...selectedMarker, reviews: reviewsData });
+      rating.value = '';
+      comment.value = '';
     } catch (error) {
-      console.error('Error fetching locations:', error.response || error);
+      console.error('Error adding review:', error);
     }
   };
 
   useEffect(() => {
-    const initializeMap = () => {
-      if (map.current !== null) return; // Exit if map is already initialized
-
-      const newMap = L.map(mapRef.current).setView([40.7128, -74.0060], 12);
-
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution:
-          'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors',
-        maxZoom: 18,
-      }).addTo(newMap);
-
-      map.current = newMap;
+    const loadMapScript = () => {
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY}&libraries=places`;
+      script.onload = () => setIsMapLoaded(true);
+      document.head.appendChild(script);
     };
 
-    initializeMap();
-    fetchLocations();
-  }, [searchQuery]);
-
-  const handleRatingChange = (rating, locationId) => {
-    setLocations((prevLocations) => {
-      return prevLocations.map((location) => {
-        if (location.id === locationId) {
-          return { ...location, rating };
-        }
-        return location;
-      });
-    });
-  };
-
-  const handleCommentChange = (comment, locationId) => {
-    setLocations((prevLocations) => {
-      return prevLocations.map((location) => {
-        if (location.id === locationId) {
-          return { ...location, reviewComment: comment };
-        }
-        return location;
-      });
-    });
-  };
-
-  const handleReviewSubmit = async (locationId, rating, comment) => {
-    try {
-      const response = await axios.post(
-        `/${API}/locations/${locationId}/reviews`,
-        { rating, comment }
-      );
-      const newReview = response.data;
-
-      setLocations((prevLocations) => {
-        return prevLocations.map((location) => {
-          if (location.id === locationId) {
-            return { ...location, reviews: [...location.reviews, newReview] };
-          }
-          return location;
-        });
-      });
-    } catch (error) {
-      console.error('Error submitting review:', error.response || error);
-    }
-  };
-
-  const handleSearch = (e) => {
-    e.preventDefault();
-    fetchLocations();
-  };
-
-  const handleLocationSelect = (location) => {
-    setSelectedLocation(location);
-  };
+    loadMapScript();
+  }, []);
 
   return (
-    <div>
-      <h1>Map</h1>
-      <form onSubmit={handleSearch}>
-        <div>
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search for a location"
-          />
-          <button type="submit">Search</button>
+    <div className="container">
+      <img src="/assets/logo.png" alt="Logo" className="logo" />
+
+      <div className="map">
+        <div style={{ width: '100%', height: '400px' }}>
+          {isMapLoaded && (
+            <GoogleMap
+              mapContainerStyle={{ width: '100%', height: '100%' }}
+              center={mapCenter}
+              zoom={10}
+              onLoad={(map) => setIsMapLoaded(true)}
+            >
+              <Autocomplete
+                ref={autocompleteRef}
+                style={{ width: '100%' }}
+                types={['geocode']}
+                bounds={{ north: 40.9176, south: 40.4774, east: -73.7004, west: -74.2591 }}
+                onPlaceChanged={handlePlaceSelect}
+              >
+                <div>
+                  {markers.map((marker) => (
+                    <Marker
+                      key={marker.id}
+                      position={{ lat: marker.latitude, lng: marker.longitude }}
+                      onClick={() => handleMarkerClick(marker)}
+                    />
+                  ))}
+                </div>
+              </Autocomplete>
+
+              {selectedMarker && (
+                <InfoWindow
+                  position={{ lat: selectedMarker.latitude, lng: selectedMarker.longitude }}
+                  onCloseClick={handleInfoWindowClose}
+                >
+                  <div>
+                    <h2>{selectedMarker.name}</h2>
+                    <p>{selectedMarker.address}</p>
+                    <p>{selectedMarker.phone}</p>
+
+                    {isLoggedIn ? (
+                      <form onSubmit={handleReviewSubmit}>
+                        <label>
+                          Rating:
+                          <input type="number" name="rating" min="1" max="5" required />
+                        </label>
+                        <br />
+                        <label>
+                          Comment:
+                          <textarea name="comment" required></textarea>
+                        </label>
+                        <br />
+                        <button type="submit">Submit Review</button>
+                      </form>
+                    ) : (
+                      <p>You must be logged in to submit a review.</p>
+                    )}
+
+                    {selectedMarker.reviews && (
+                      <div>
+                        <h3>Reviews</h3>
+                        {selectedMarker.reviews.map((review) => (
+                          <div key={review.id}>
+                            <p>Rating: {review.rating}</p>
+                            <p>Comment: {review.comment}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </InfoWindow>
+              )}
+            </GoogleMap>
+          )}
         </div>
-      </form>
-      <div id="map" ref={mapRef} style={{ height: '400px' }}></div>
-      {selectedLocation && (
-        <div>
-          <h3>{selectedLocation.name}</h3>
-          <p>{selectedLocation.address}</p>
-          <ul>
-            {selectedLocation.reviews.map((review) => (
-              <li key={review.id}>
-                <strong>Rating:</strong> {review.rating},{' '}
-                <strong>Comment:</strong> {review.comment}
-              </li>
-            ))}
-          </ul>
-          <input
-            type="number"
-            min="1"
-            max="5"
-            value={selectedLocation.rating}
-            onChange={(e) => handleRatingChange(e.target.value, selectedLocation.id)}
-          />
-          <textarea
-            value={selectedLocation.reviewComment}
-            onChange={(e) => handleCommentChange(e.target.value, selectedLocation.id)}
-          ></textarea>
-          <button
-            onClick={() =>
-              handleReviewSubmit(selectedLocation.id, selectedLocation.rating, selectedLocation.reviewComment)
-            }
-          >
-            Submit Review
-          </button>
-        </div>
-      )}
-      {locations.map((location) => (
-        <div key={location.id} onClick={() => handleLocationSelect(location)} role="button" tabIndex={0}>
-          <h3>{location.name}</h3>
-          <p>{location.address}</p>
-        </div>
-      ))}
+      </div>
     </div>
   );
 };
