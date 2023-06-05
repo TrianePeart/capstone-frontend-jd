@@ -38,77 +38,50 @@ const ChatbotModal = () => {
 
   const handleNextPrompt = (response) => {
     let newMessages = [];
-  
+
     switch (moodIndex) {
+      case 0: // Good
+        // No further questions
+        break;
       case 1: // Angry
-        if (response === 'yes') {
-          newMessages.push(
-            { type: 'bot', text: 'Are you thinking of harming yourself or others?' }
-          );
-        }else if (response = 'yes'){
-          return handleYesClick();
-        } else {
-          handleNoClick();
-          return;
-        }
-        break;
       case 2: // Sad
-        if (response === 'yes') {
-          newMessages.push(
-            { type: 'bot', text: 'Are you having feelings of self-harm?' }
-          );
-        } else {
-          handleNoClick();
-          return;
-        }
-        break;
       case 3: // Worthless
         if (response === 'yes') {
-          newMessages.push(
-            { type: 'bot', text: 'We are sorry you\'re feeling down. Are you having feelings of self-harm?' }
-          );
+          newMessages.push({ type: 'bot', text: 'Are you having feelings of self-harm?' });
+          setChatMessages((prevMessages) => [...prevMessages, ...newMessages]);
         } else {
           handleNoClick();
-          return;
         }
         break;
       default:
         break;
     }
-  
-    setChatMessages((prevMessages) => [...prevMessages, ...newMessages]);
   };
+  
   
   const handleYesClick = () => {
     const selectedMood = moods[moodIndex];
     let newMessages = [];
-  
+
     if (selectedMood === moods[1]) {
-      //Anger
+      // Anger
       newMessages.push(
         { type: 'bot', text: 'Please seek help by following this link: hotline-website-link' },
         { type: 'bot', text: 'If you need immediate assistance, please call the hotline at: hotline-number' }
       );
     } else if (selectedMood === moods[2]) {
-      //Sadness
-      newMessages.push(
-        { type: 'bot', text: 'Are you having feelings of self-harm?' }
-      );
+      // Sadness
       newMessages.push(
         { type: 'bot', text: 'Please seek help by following this link: hotline-website-link' },
         { type: 'bot', text: 'If you need immediate assistance, please call the hotline at: hotline-number' }
       );
     } else if (selectedMood === moods[3]) {
-      //Worthless
+      // Worthless
       newMessages.push(
-        { type: 'bot', text: 'We are sorry you\'re feeling down. Are you having feelings of self-harm?' }
-      );
-      newMessages.push(
-        { type: 'bot', text: 'If you need immediate assistance, please call the hotline at: hotline-number' },
-        { type: 'bot', text: 'You can also visit the website: hotline-website-link for additional resources.' }
+        { type: 'bot', text: 'Please seek help by following this link: hotline-website-link' },
+        { type: 'bot', text: 'If you need immediate assistance, please call the hotline at: hotline-number' }
       );
     }
-  
     setChatMessages((prevMessages) => [...prevMessages, ...newMessages]);
   };
   
@@ -120,16 +93,18 @@ const ChatbotModal = () => {
       newMessages.push(
         { type: 'bot', text: 'Here is a link on ways to deal with anger: ways-to-deal-link' }
       );
-      //have to change it to close modal after this is done 
     } else if (selectedMood === moods[2]) {
       newMessages.push(
         { type: 'bot', text: 'Here is a link on ways to deal with sadness: ways-to-deal-link' }
+      );
+    }else{
+      newMessages.push(
+        { type: 'bot', text: 'Here is a link on ways to deal with self-worth: ways-to-deal-link' }
       );
     }
   
     setChatMessages((prevMessages) => [...prevMessages, ...newMessages]);
   };
-  
 
   return (
     <div className="chat-container">
@@ -160,7 +135,7 @@ const ChatbotModal = () => {
                   </div>
                 ))}
               </div>
-              {selectedMood === "I'm feeling Good." && (
+              {selectedMood === moods[0] && (
                 <div className="confetti">Confetti animation goes here</div>
               )}
               {selectedMood !== moods[0] && (
