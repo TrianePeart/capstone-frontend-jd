@@ -1,19 +1,24 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { GoogleMap, Marker, InfoWindow, Autocomplete } from '@react-google-maps/api';
+import RatingStars from 'react-rating-stars-component';
 import '../style/SensoryMap.css';
-
 const SensoryMap = () => {
   const [mapCenter, setMapCenter] = useState({ lat: 40.7128, lng: -74.0060 });
   const [markers, setMarkers] = useState([]);
   const [selectedMarker, setSelectedMarker] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [reviewRating, setReviewRating] = useState(0);
+  const [reviewComment, setReviewComment] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const autocompleteRef = useRef(null);
   const [isMapLoaded, setIsMapLoaded] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/maps`);
+        const response = await fetch(
+          `${process.env.REACT_APP_API_URL}/maps?search=${searchQuery}`
+        );
         const data = await response.json();
         const filteredData = data.filter((location) =>
           location.address.toLowerCase().includes('new york city')
@@ -25,7 +30,7 @@ const SensoryMap = () => {
     };
 
     fetchData();
-  }, []);
+  }, [searchQuery]);
 
   const handleMarkerClick = (marker) => {
     setSelectedMarker(marker);
@@ -47,7 +52,6 @@ const SensoryMap = () => {
 
   const handleReviewSubmit = async (event) => {
     event.preventDefault();
-    const { rating, comment } = event.target;
 
     if (!isLoggedIn) {
       console.error('You must be logged in to submit a review.');
@@ -55,23 +59,28 @@ const SensoryMap = () => {
     }
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/maps/${selectedMarker.id}/reviews`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          rating: rating.value,
-          comment: comment.value
-        })
-      });
+      const response = await fetch(
+        `${process.env.REACT_APP_API_URL}/maps/${selectedMarker.id}/reviews`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            rating: reviewRating,
+            comment: reviewComment
+          })
+        }
+      );
       const newReview = await response.json();
       console.log('New review:', newReview);
-      const reviewsResponse = await fetch(`${process.env.REACT_APP_API_URL}/maps/${selectedMarker.id}/reviews`);
+      const reviewsResponse = await fetch(
+        `${process.env.REACT_APP_API_URL}/maps/${selectedMarker.id}/reviews`
+      );
       const reviewsData = await reviewsResponse.json();
       setSelectedMarker({ ...selectedMarker, reviews: reviewsData });
-      rating.value = '';
-      comment.value = '';
+      setReviewRating(0);
+      setReviewComment('');
     } catch (error) {
       console.error('Error adding review:', error);
     }
@@ -90,83 +99,98 @@ const SensoryMap = () => {
 
   return (
     <div className="container">
-      <img src="/assets/logo.png" alt="Logo" className="logo" />
+     
 
       <div className="map">
-        <div style={{ width: '100%', height: '400px' }}>
-          {isMapLoaded && (
-            <GoogleMap
-              mapContainerStyle={{ width: '100%', height: '100%' }}
-              center={mapCenter}
-              zoom={10}
-              onLoad={(map) => setIsMapLoaded(true)}
-            >
-              <Autocomplete
-                ref={autocompleteRef}
-                style={{ width: '100%' }}
-                types={['geocode']}
-                bounds={{ north: 40.9176, south: 40.4774, east: -73.7004, west: -74.2591 }}
-                onPlaceChanged={handlePlaceSelect}
+        <div className="search">
+          <Autocomplete
+            onLoad={(autocomplete) => (autocompleteRef.current = autocomplete)}
+            onPlaceChanged={handlePlaceSelect}
+          >
+            <input
+              type="text"
+              placeholder="Search for a location"
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+            />
+          </Autocomplete>
+        </div>
+
+        {isMapLoaded && (
+          <GoogleMap
+            mapContainerStyle={{ width: '100%', height: '100%' }}
+            center={mapCenter}
+            zoom={12}
+          >
+            {markers.map((marker) => (
+              <Marker
+                key={marker.id}
+                position={{ lat: marker.lat, lng: marker.lng }}
+                onClick={() => handleMarkerClick(marker)}
+              />
+            ))}
+
+            {selectedMarker && (
+              <InfoWindow
+                position={{ lat: selectedMarker.lat, lng: selectedMarker.lng }}
+                onCloseClick={handleInfoWindowClose}
               >
                 <div>
-                  {markers.map((marker) => (
-                    <Marker
-                      key={marker.id}
-                      position={{ lat: marker.latitude, lng: marker.longitude }}
-                      onClick={() => handleMarkerClick(marker)}
-                    />
-                  ))}
+                  <h2>{selectedMarker.name}</h2>
+                  <p>{selectedMarker.address}</p>
+                  <h3>Reviews:</h3>
+                  {selectedMarker.reviews && selectedMarker.reviews.length > 0 ? (
+                    <ul>
+                      {selectedMarker.reviews.map((review) => (
+                        <li key={review.id}>
+                          <p>Rating: {review.rating}</p>
+                          <p>Comment: {review.comment}</p>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p>No reviews available.</p>
+                  )}
+
+                  {isLoggedIn ? (
+                    <form onSubmit={handleReviewSubmit}>
+                      <label htmlFor="rating">
+                        Rating:
+                        <RatingStars
+                          id="rating"
+                          count={5}
+                          value={reviewRating}
+                          onChange={(rating) => setReviewRating(rating)}
+                          size={24}
+                          activeColor="#ffd700"
+                        />
+                      </label>
+                      <br />
+                      <label htmlFor="comment">
+                        Comment:
+                        <textarea
+                          id="comment"
+                          name="comment"
+                          value={reviewComment}
+                          onChange={(event) => setReviewComment(event.target.value)}
+                          required
+                        ></textarea>
+                      </label>
+                      <br />
+                      <button type="submit">Submit Review</button>
+                    </form>
+                  ) : (
+                    <p>You must be logged in to submit a review.</p>
+                  )}
                 </div>
-              </Autocomplete>
-
-              {selectedMarker && (
-                <InfoWindow
-                  position={{ lat: selectedMarker.latitude, lng: selectedMarker.longitude }}
-                  onCloseClick={handleInfoWindowClose}
-                >
-                  <div>
-                    <h2>{selectedMarker.name}</h2>
-                    <p>{selectedMarker.address}</p>
-                    <p>{selectedMarker.phone}</p>
-
-                    {isLoggedIn ? (
-                      <form onSubmit={handleReviewSubmit}>
-                        <label>
-                          Rating:
-                          <input type="number" name="rating" min="1" max="5" required />
-                        </label>
-                        <br />
-                        <label>
-                          Comment:
-                          <textarea name="comment" required></textarea>
-                        </label>
-                        <br />
-                        <button type="submit">Submit Review</button>
-                      </form>
-                    ) : (
-                      <p>You must be logged in to submit a review.</p>
-                    )}
-
-                    {selectedMarker.reviews && (
-                      <div>
-                        <h3>Reviews</h3>
-                        {selectedMarker.reviews.map((review) => (
-                          <div key={review.id}>
-                            <p>Rating: {review.rating}</p>
-                            <p>Comment: {review.comment}</p>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </InfoWindow>
-              )}
-            </GoogleMap>
-          )}
-        </div>
+              </InfoWindow>
+            )}
+          </GoogleMap>
+        )}
       </div>
     </div>
   );
 };
 
 export default SensoryMap;
+
