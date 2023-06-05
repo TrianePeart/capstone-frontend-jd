@@ -51,7 +51,7 @@ const ChatbotModal = () => {
           setChatMessages((prevMessages) => [...prevMessages, ...newMessages]);
         } else {
           handleNoClick();
-        }
+        } 
         break;
       default:
         break;
